@@ -4,7 +4,7 @@
 #include <limine.h>
 #include "text_renderer.h"
 #include <stdarg.h>
-
+#include "serial.h"
 
 // Framebuffer request
 __attribute__((used, section(".limine_requests")))
@@ -220,6 +220,8 @@ void putc(char c) {
         cursor_x++;
     }
 
+    serial_putc(c);
+
     // Wrap text
     if (cursor_x >= get_screen_width()) {
         cursor_x = 0;
@@ -231,6 +233,8 @@ void putc(char c) {
         scroll_screen();
         cursor_y = get_screen_height() - 1;
     }
+
+
 }
 
 // Print string
@@ -265,43 +269,80 @@ void itoa(int value, char *str, int base) {
     }
 }
 
+
+void utoa(uint64_t value, char *str, int base) {
+    char *ptr = str, *ptr1 = str, tmp_char;
+    uint64_t tmp_value;
+
+    do {
+        tmp_value = value;
+        value /= base;
+        *ptr++ = "0123456789ABCDEF"[tmp_value % base];
+    } while (value);
+
+    *ptr-- = '\0';
+
+    while (ptr1 < ptr) {
+        tmp_char = *ptr;
+        *ptr-- = *ptr1;
+        *ptr1++ = tmp_char;
+    }
+}
+
+
 // Kernel printf implementation
 void kprintf(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     
     char buffer[32];
-    
+
     for (; *fmt; fmt++) {
         if (*fmt == '%') {
             fmt++;
-            switch (*fmt) {
-                case 's':
-                    puts(va_arg(args, char*));
-                    break;
-                case 'd':
-                    itoa(va_arg(args, int), buffer, 10);
-                    puts(buffer);
-                    break;
-                case 'x':
-                    itoa(va_arg(args, int), buffer, 16);
-                    puts(buffer);
-                    break;
-                case '%':
-                    putc('%');
-                    break;
-                default:
-                    putc('%');
-                    putc(*fmt);
-                    break;
+
+            if (*fmt == 'l' && *(fmt + 1) == 'x') { // Handle %lx
+                fmt++;  // Skip the 'x'
+                utoa(va_arg(args, uint64_t), buffer, 16);
+                puts(buffer);
+            } else {
+                switch (*fmt) {
+                    case 's':
+                        puts(va_arg(args, char*));
+                        break;
+                    case 'd':
+                        itoa(va_arg(args, int), buffer, 10);
+                        puts(buffer);
+                        break;
+                    case 'x':
+                        utoa(va_arg(args, unsigned int), buffer, 16);
+                        puts(buffer);
+                        break;
+                    case 'p': { // Handle %p
+                        uint64_t ptr = (uint64_t)va_arg(args, void*);
+                        puts("0x");
+                        utoa(ptr, buffer, 16);
+                        puts(buffer);
+                        break;
+                    }
+                    case '%':
+                        putc('%');
+                        break;
+                    default:
+                        putc('%');
+                        putc(*fmt);
+                        break;
+                }
             }
         } else {
             putc(*fmt);
         }
     }
-    
+
     va_end(args);
 }
+
+
 
 // Initialize framebuffer and clear screen
 bool init_text_renderer() {
@@ -321,5 +362,9 @@ bool init_text_renderer() {
     clear_screen();
     cursor_x = 0;
     cursor_y = 0;
+
+    serial_init();
+
+    kprintf("Framebuffer data at 0x%lx\n", framebuffer);
     return true;
 }
