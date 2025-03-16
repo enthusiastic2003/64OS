@@ -2,6 +2,7 @@
 #define TEXT_RENDERER_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // Initialize the text renderer (sets up framebuffer and clears screen)
 bool init_text_renderer();

@@ -3,7 +3,10 @@
 #include <stdbool.h>
 #include <limine.h>
 #include "text_renderer.h"
-#include "pagining_mgr.h"
+#include "pmm_mngr.h"
+#include "vmm_mngr.h"
+#include "string.h"
+
 // Set the base revision to 3, this is recommended as this is the latest
 // base revision described by the Limine boot protocol specification.
 // See specification for further info.
@@ -39,25 +42,11 @@ static volatile struct limine_memmap_request memmap_request = {
     .revision = 0
 };
 
-// Function to print memory map
-void print_memmap(void) {
-    if (memmap_request.response == NULL) {
-        kprintf("Memory map request failed!\n");
-        return;
-    }
-
-    kprintf("Memory Map:\n");
-
-    struct limine_memmap_entry **entries = memmap_request.response->entries;
-    uint64_t entry_count = memmap_request.response->entry_count;
-
-    for (uint64_t i = 0; i < entry_count; i++) {
-        struct limine_memmap_entry *entry = entries[i];
-
-        kprintf("Region %d: Base: %lx, Length: %lx, Type: %d\n",
-                i, entry->base, entry->length, entry->type);
-    }
-}
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_hhdm_request hhdm_request = {
+    .id = LIMINE_HHDM_REQUEST,
+    .revision = 0,    
+};
 
 
 // GCC and Clang reserve the right to generate calls to the following
@@ -65,57 +54,6 @@ void print_memmap(void) {
 // Implement them as the C specification mandates.
 // DO NOT remove or rename these functions, or stuff will eventually break!
 // They CAN be moved to a different .c file.
-
-void *memcpy(void *dest, const void *src, size_t n) {
-    uint8_t *pdest = (uint8_t *)dest;
-    const uint8_t *psrc = (const uint8_t *)src;
-
-    for (size_t i = 0; i < n; i++) {
-        pdest[i] = psrc[i];
-    }
-
-    return dest;
-}
-
-void *memset(void *s, int c, size_t n) {
-    uint8_t *p = (uint8_t *)s;
-
-    for (size_t i = 0; i < n; i++) {
-        p[i] = (uint8_t)c;
-    }
-
-    return s;
-}
-
-void *memmove(void *dest, const void *src, size_t n) {
-    uint8_t *pdest = (uint8_t *)dest;
-    const uint8_t *psrc = (const uint8_t *)src;
-
-    if (src > dest) {
-        for (size_t i = 0; i < n; i++) {
-            pdest[i] = psrc[i];
-        }
-    } else if (src < dest) {
-        for (size_t i = n; i > 0; i--) {
-            pdest[i-1] = psrc[i-1];
-        }
-    }
-
-    return dest;
-}
-
-int memcmp(const void *s1, const void *s2, size_t n) {
-    const uint8_t *p1 = (const uint8_t *)s1;
-    const uint8_t *p2 = (const uint8_t *)s2;
-
-    for (size_t i = 0; i < n; i++) {
-        if (p1[i] != p2[i]) {
-            return p1[i] < p2[i] ? -1 : 1;
-        }
-    }
-
-    return 0;
-}
 
 // Halt and catch fire function.
 static void hcf(void) {
@@ -130,18 +68,6 @@ static void hcf(void) {
     }
 }
 
-void dump_pml4() {
-
-    uint64_t cr3 = read_cr3();
-
-    uint64_t *pml4 = (uint64_t *) (0xFFFF800000000000 + cr3);
-    
-    for (int i = 0; i < 512; i++) {
-        if (pml4[i] & 1) {  // Check if present
-            kprintf("PML4[%d]: %lx (maps %lx000000000)\n", i, pml4[i], (uint64_t)i);
-        }
-    }
-}
 
 
 // The following will be our kernel's entry point.
@@ -160,14 +86,30 @@ void kmain(void) {
     }
 
     kprintf("kmain is at: %p\n", (uint64_t)&kmain);
-    uint64_t rsp;
-    asm volatile("mov %%rsp, %0" : "=r"(rsp));
+    uint64_t rsp = read_cr3();
     kprintf("Current stack pointer: %p\n", rsp);
-    // We're done, just hang...3
-    print_memmap();
-    kprintf("Printing page mappings...\n");
-    kprintf("cr3: %lx\n", 0xFFFF800000000000 + read_cr3());
-    dump_pml4();
+    kprintf("cr3: %lx\n", hhdm_request.response->offset + read_cr3());
+    print_and_init_memmap(memmap_request, hhdm_request);
+
+
+    kprintf("-------------------------\n");
+    kprintf("PMM tests\n");
+    kprintf("-------------------------\n");
+    kprintf("Total frames: %lu\n", get_total_frame_count());
+    kprintf("Free frames: %lu\n", get_free_frame_count());
+    kprintf("Used frames: %lu\n", get_used_frame_count());
+    uint64_t frame1 = pmm_alloc();
+    uint64_t frame2 = pmm_alloc();
+    kprintf("Allocated frames: 0x%lx, 0x%lx\n", frame1, frame2);
+
+    kprintf("Free frames: %lu\n", get_free_frame_count());
+    kprintf("Used frames: %lu\n", get_used_frame_count());
+
+    pmm_free(frame1);
+    kprintf("Freed 1 frame\n");
+    kprintf("Free frames: %lu\n", get_free_frame_count());
+    kprintf("Used frames: %lu\n", get_used_frame_count());
+
 
     hcf();
 }

@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "cstdio": "c",
-        "text_renderer.h": "c"
+        "text_renderer.h": "c",
+        "chrono": "c"
     }
 }

@@ -301,10 +301,19 @@ void kprintf(const char *fmt, ...) {
         if (*fmt == '%') {
             fmt++;
 
-            if (*fmt == 'l' && *(fmt + 1) == 'x') { // Handle %lx
-                fmt++;  // Skip the 'x'
-                utoa(va_arg(args, uint64_t), buffer, 16);
-                puts(buffer);
+            if (*fmt == 'l') {
+                fmt++;
+                if (*fmt == 'x') { // Handle %lx
+                    utoa(va_arg(args, uint64_t), buffer, 16);
+                    puts(buffer);
+                } else if (*fmt == 'u') { // Handle %lu
+                    utoa(va_arg(args, unsigned long), buffer, 10);
+                    puts(buffer);
+                } else { // Unsupported 'l' case
+                    putc('%');
+                    putc('l');
+                    putc(*fmt);
+                }
             } else {
                 switch (*fmt) {
                     case 's':
@@ -325,6 +334,10 @@ void kprintf(const char *fmt, ...) {
                         puts(buffer);
                         break;
                     }
+                    case 'u': // Handle %u (unsigned int)
+                        utoa(va_arg(args, unsigned int), buffer, 10);
+                        puts(buffer);
+                        break;
                     case '%':
                         putc('%');
                         break;
@@ -341,6 +354,7 @@ void kprintf(const char *fmt, ...) {
 
     va_end(args);
 }
+
 
 
 

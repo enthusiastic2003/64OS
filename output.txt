@@ -1,48 +1,67 @@
 [2J[01;01H[=3h[2J[01;01H[2J[01;01H[8;042;160t0[2J[01;01H[2J[01;01H[8;056;240t0[2J[01;01HBdsDxe: loading Boot0002 "UEFI QEMU DVD-ROM QM00005 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0)
 BdsDxe: starting Boot0002 "UEFI QEMU DVD-ROM QM00005 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0)
 [2J[01;01H[01;01H[2J[01;01H[01;01HFramebuffer data at 0xFFFF80007FEDC000
-kmain is at: 0xFFFFFFFF800010E0
-Current stack pointer: 0xFFFF80007E68DFF0
+kmain is at: 0xFFFFFFFF80001000
+Current stack pointer: 0x7E67C000
+cr3: FFFF80007E67C000
 Memory Map:
-Region 0: Base: 0, Length: A0000, Type: 0
-Region 1: Base: 100000, Length: 700000, Type: 0
-Region 2: Base: 800000, Length: 8000, Type: 3
-Region 3: Base: 808000, Length: 3000, Type: 0
-Region 4: Base: 80B000, Length: 1000, Type: 3
-Region 5: Base: 80C000, Length: 5000, Type: 0
-Region 6: Base: 811000, Length: EF000, Type: 3
-Region 7: Base: 900000, Length: 7B2DD000, Type: 0
-Region 8: Base: 7BBDD000, Length: 9000, Type: 5
-Region 9: Base: 7BBE6000, Length: B000, Type: 0
-Region 10: Base: 7BBF1000, Length: 3B000, Type: 5
-Region 11: Base: 7BC2C000, Length: 29E9000, Type: 0
-Region 12: Base: 7E615000, Length: 5000, Type: 1
-Region 13: Base: 7E61A000, Length: 12000, Type: 0
-Region 14: Base: 7E62C000, Length: 3F000, Type: 5
-Region 15: Base: 7E66B000, Length: 4000, Type: 6
-Region 16: Base: 7E66F000, Length: 2E000, Type: 5
-Region 17: Base: 7E69D000, Length: 8000, Type: 1
-Region 18: Base: 7E6A5000, Length: DE000, Type: 0
-Region 19: Base: 7E783000, Length: 1000, Type: 5
-Region 20: Base: 7E784000, Length: 3000, Type: 1
-Region 21: Base: 7E787000, Length: D66000, Type: 0
-Region 22: Base: 7F4ED000, Length: 100000, Type: 1
-Region 23: Base: 7F5ED000, Length: 100000, Type: 1
-Region 24: Base: 7F6ED000, Length: 80000, Type: 1
-Region 25: Base: 7F76D000, Length: 12000, Type: 2
-Region 26: Base: 7F77F000, Length: 80000, Type: 3
-Region 27: Base: 7F7FF000, Length: 601000, Type: 0
-Region 28: Base: 7FE00000, Length: E3000, Type: 5
-Region 29: Base: 7FEE3000, Length: 43000, Type: 0
-Region 30: Base: 7FF26000, Length: 4000, Type: 1
-Region 31: Base: 7FF2A000, Length: 2000, Type: 3
-Region 32: Base: 7FF2C000, Length: 2C000, Type: 0
-Region 33: Base: 7FF58000, Length: 20000, Type: 1
-Region 34: Base: 7FF78000, Length: 88000, Type: 3
-Region 35: Base: 80000000, Length: 3E8000, Type: 7
-Region 36: Base: E0000000, Length: 10000000, Type: 1
-Region 37: Base: FD00000000, Length: 300000000, Type: 1
-Printing page mappings...
-cr3: FFFF80007E67D000
-PML4[256]: 7E677027 (maps 100000000000)
-PML4[511]: 7E67C027 (maps 1FF000000000)
+  Base: 0x0, Length: 0xA0000, Type: 0
+  Base: 0x100000, Length: 0x700000, Type: 0
+  Base: 0x800000, Length: 0x8000, Type: 3
+  Base: 0x808000, Length: 0x3000, Type: 0
+  Base: 0x80B000, Length: 0x1000, Type: 3
+  Base: 0x80C000, Length: 0x5000, Type: 0
+  Base: 0x811000, Length: 0xEF000, Type: 3
+  Base: 0x900000, Length: 0x7B2D9000, Type: 0
+  Base: 0x7BBD9000, Length: 0xE000, Type: 5
+  Base: 0x7BBE7000, Length: 0x8000, Type: 0
+  Base: 0x7BBEF000, Length: 0x3E000, Type: 5
+  Base: 0x7BC2D000, Length: 0x29E9000, Type: 0
+  Base: 0x7E616000, Length: 0x5000, Type: 1
+  Base: 0x7E61B000, Length: 0x12000, Type: 0
+  Base: 0x7E62D000, Length: 0x3D000, Type: 5
+  Base: 0x7E66A000, Length: 0x5000, Type: 6
+  Base: 0x7E66F000, Length: 0x2F000, Type: 5
+  Base: 0x7E69E000, Length: 0x8000, Type: 1
+  Base: 0x7E6A6000, Length: 0xDE000, Type: 0
+  Base: 0x7E784000, Length: 0x3000, Type: 1
+  Base: 0x7E787000, Length: 0xD66000, Type: 0
+  Base: 0x7F4ED000, Length: 0x100000, Type: 1
+  Base: 0x7F5ED000, Length: 0x100000, Type: 1
+  Base: 0x7F6ED000, Length: 0x80000, Type: 1
+  Base: 0x7F76D000, Length: 0x12000, Type: 2
+  Base: 0x7F77F000, Length: 0x80000, Type: 3
+  Base: 0x7F7FF000, Length: 0x601000, Type: 0
+  Base: 0x7FE00000, Length: 0xE3000, Type: 5
+  Base: 0x7FEE3000, Length: 0x43000, Type: 0
+  Base: 0x7FF26000, Length: 0x4000, Type: 1
+  Base: 0x7FF2A000, Length: 0x2000, Type: 3
+  Base: 0x7FF2C000, Length: 0x2C000, Type: 0
+  Base: 0x7FF58000, Length: 0x20000, Type: 1
+  Base: 0x7FF78000, Length: 0x88000, Type: 3
+  Base: 0x80000000, Length: 0x3E8000, Type: 7
+  Base: 0xE0000000, Length: 0x10000000, Type: 1
+  Base: 0x100000000, Length: 0x80000000, Type: 0
+  Base: 0xFD00000000, Length: 0x300000000, Type: 1
+Total memory: 4089 MB
+Total frames: 1046840
+Bitmap size: 127 KB
+Bitmap address: 0xFFFF800100000000
+Bitmap start: 100000000
+Bitmap end: 10001FF27
+Bitmap start frame: 1048576
+Bitmap end frame: 1048608
+PMM initialized!
+Total frames: 1046840, Used frames: 32
+-------------------------
+PMM tests
+-------------------------
+Total frames: 1046840
+Free frames: 1046808
+Used frames: 32
+Allocated frames: 0x100000, 0x101000
+Free frames: 1046806
+Used frames: 34
+Freed 1 frame
+Free frames: 1046807
+Used frames: 33
