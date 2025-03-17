@@ -134,9 +134,7 @@ void kmain(void) {
     kprintf("limine_memmap_request response: %p\n, end: %p\n", memmap_request.response, sizeof(memmap_request.response) + memmap_request.response);
     
     kprintf("Kernel end: %p\n", &_end);
-    kprintf("Testing huge pages\n");
-    test_huge_pages();
-    
+        
     hcf();
 
 
