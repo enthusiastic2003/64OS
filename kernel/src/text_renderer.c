@@ -5,14 +5,7 @@
 #include "text_renderer.h"
 #include <stdarg.h>
 #include "serial.h"
-
-// Framebuffer request
-__attribute__((used, section(".limine_requests")))
-static volatile struct limine_framebuffer_request framebuffer_request = {
-    .id = LIMINE_FRAMEBUFFER_REQUEST,
-    .revision = 0
-};
-
+#include "limine_requests.h"
 // Get framebuffer once available
 static struct limine_framebuffer *framebuffer;
 

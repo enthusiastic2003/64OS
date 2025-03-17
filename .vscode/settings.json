@@ -2,6 +2,16 @@
     "files.associations": {
         "cstdio": "c",
         "text_renderer.h": "c",
-        "chrono": "c"
+        "chrono": "c",
+        "limine_requests.h": "c",
+        "pmm_mngr.h": "c",
+        "vmm_mngr.h": "c",
+        "limine.h": "c",
+        "array": "c",
+        "bitset": "c",
+        "string_view": "c",
+        "format": "c",
+        "initializer_list": "c",
+        "span": "c"
     }
 }

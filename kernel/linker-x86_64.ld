@@ -65,4 +65,7 @@ SECTIONS
         *(.eh_frame*)
         *(.note .note.*)
     }
+
+     . = ALIGN(4K);
+    _end = .;  /* Mark end of kernel */
 }
