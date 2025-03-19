@@ -6,9 +6,11 @@
 #include <stdarg.h>
 #include "serial.h"
 #include "limine_requests.h"
-// Get framebuffer once available
-static struct limine_framebuffer *framebuffer;
 
+uint64_t* fb_address;
+uint64_t fb_width;
+uint64_t fb_height;
+uint64_t fb_pitch;
 
 
 // Font size
@@ -21,11 +23,11 @@ static size_t cursor_y = 0;
 
 // Calculate screen dimensions in characters
 static size_t get_screen_width() {
-    return framebuffer->width / FONT_WIDTH;
+    return fb_width / FONT_WIDTH;
 }
 
 static size_t get_screen_height() {
-    return framebuffer->height / FONT_HEIGHT;
+    return fb_height / FONT_HEIGHT;
 }
 
 // Font bitmap data would be here (we're skipping as requested)
@@ -130,11 +132,11 @@ const uint8_t font[95][8] = {
 
 // Draw pixel on the framebuffer
 void put_pixel(int x, int y, uint32_t color) {
-    if (x < 0 || y < 0 || x >= framebuffer->width || y >= framebuffer->height)
+    if (x < 0 || y < 0 || x >= fb_width || y >= fb_height)
         return; // Bounds checking
         
-    uint32_t *fb = (uint32_t*)framebuffer->address;
-    fb[y * (framebuffer->pitch / 4) + x] = color;
+    uint32_t *fb = (uint32_t*)fb_address;
+    fb[y * (fb_pitch / 4) + x] = color;
 }
 
 // Render a single character
@@ -164,10 +166,9 @@ void draw_char(int x, int y, char c, uint32_t color) {
 
 // Clear screen by filling it with black
 void clear_screen() {
-    if (!framebuffer) return;
     
-    uint32_t *fb = (uint32_t*)framebuffer->address;
-    int pixels = framebuffer->height * (framebuffer->pitch / 4);
+    uint32_t *fb = (uint32_t*)fb_address;
+    int pixels = fb_height * (fb_pitch / 4);
     
     for (int i = 0; i < pixels; i++) {
         fb[i] = 0x000000; // Black
@@ -176,21 +177,20 @@ void clear_screen() {
 
 // Scroll screen up by one line
 void scroll_screen() {
-    if (!framebuffer) return;
     
-    uint32_t *fb = (uint32_t*)framebuffer->address;
-    int pitch = framebuffer->pitch / 4;
+    uint32_t *fb = (uint32_t*)fb_address;
+    int pitch = fb_pitch / 4;
 
     // Copy each row up one line
-    for (int y = 0; y < framebuffer->height - FONT_HEIGHT; y++) {
-        for (int x = 0; x < framebuffer->width; x++) {
+    for (int y = 0; y < fb_height - FONT_HEIGHT; y++) {
+        for (int x = 0; x < fb_width; x++) {
             fb[y * pitch + x] = fb[(y + FONT_HEIGHT) * pitch + x];
         }
     }
 
     // Clear last row
-    for (int y = framebuffer->height - FONT_HEIGHT; y < framebuffer->height; y++) {
-        for (int x = 0; x < framebuffer->width; x++) {
+    for (int y = fb_height - FONT_HEIGHT; y < fb_height; y++) {
+        for (int x = 0; x < fb_width; x++) {
             fb[y * pitch + x] = 0x000000;
         }
     }
@@ -198,7 +198,6 @@ void scroll_screen() {
 
 // Print character to screen, handling scrolling and newlines
 void putc(char c) {
-    if (!framebuffer) return;
     
     if (c == '\n') {
         cursor_x = 0;
@@ -352,19 +351,25 @@ void kprintf(const char *fmt, ...) {
 
 
 // Initialize framebuffer and clear screen
-bool init_text_renderer() {
-    // Check if framebuffer is available
-    if (framebuffer_request.response == NULL || 
-        framebuffer_request.response->framebuffer_count < 1) {
-        return false;
-    }
+bool init_text_renderer(uint64_t* addr, uint64_t width, uint64_t height, uint64_t pitch) {
+
+    fb_address = addr;
+    fb_width = width;
+    fb_height = height;
+    fb_pitch = pitch;
+
+    // // Check if framebuffer is available
+    // if (framebuffer_request.response == NULL || 
+    //     framebuffer_request.response->framebuffer_count < 1) {
+    //     return false;
+    // }
     
-    framebuffer = framebuffer_request.response->framebuffers[0];
+    //framebuffer = framebuffer_request.response->framebuffers[0];
     
     // Validate framebuffer
-    if (!framebuffer || !framebuffer->address) {
-        return false;
-    }
+    // if (!framebuffer || !fb_address) {
+    //     return false;
+    // }
     
     clear_screen();
     cursor_x = 0;
@@ -372,6 +377,6 @@ bool init_text_renderer() {
 
     serial_init();
 
-    kprintf("Framebuffer data at 0x%lx\n", framebuffer);
+    kprintf("\n Framebuffer data at %p\n and pointer is of size %d\n", fb_address, sizeof(fb_address));
     return true;
 }

@@ -73,7 +73,7 @@ void kmain(void) {
         hcf();
     }
 
-    bool fb_init = init_text_renderer();
+    bool fb_init = init_text_renderer(framebuffer_request.response->framebuffers[0]->address, framebuffer_request.response->framebuffers[0]->width, framebuffer_request.response->framebuffers[0]->height, framebuffer_request.response->framebuffers[0]->pitch);
 
     if (!fb_init) {
         hcf();
@@ -150,16 +150,30 @@ void kmain(void) {
 
     remap_kernel();
 
-    kprintf(" Successfully remapped kernel\n");
 
-    kprintf("RSP: %p\n", get_limine_stack_base());
-    kprintf("RBP: %p\n", get_limine_stack_bottom());
+    ///////////////////////////////////////////////////////////////
+    // !!!!!!!!!!!HHDM IS NOW DISABLED!!!!!!!!!!!
+    // !!!!!!CANNOT REFERENCE HHDM REQUESTS!!!!!!
+    // !!!!NEED TO IMPLEMENT NEW PROCEDURE!!!!!!!
+    ///////////////////////////////////////////////////////////////
+
+    uint64_t old_stack_top = get_limine_stack_bottom();
+    uint64_t old_stack_bottom = get_limine_stack_base();
 
     asm volatile("mov %0, %%rbp" :: "r"(new_stack_top));
-    asm volatile("mov %0, %%rsp" :: "r"(new_stack_bottom));
+    asm volatile("mov %0, %%rsp" :: "r"(new_stack_top- (old_stack_top - old_stack_bottom)));
+
+
+    kprintf("New RSP: %p\n", get_limine_stack_base());
+    kprintf("New RBP: %p\n", get_limine_stack_bottom());
+
 
     kprintf("If you are seeing this, the stack has been remapped successfully\n");
+    kprintf("Also disabled hhdm\n");
 
+
+    
+    
     hcf();
 
 

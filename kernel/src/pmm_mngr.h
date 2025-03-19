@@ -18,6 +18,8 @@ static inline uint64_t read_cr3() {
 
 typedef uint64_t phys_addr_t;
 
+
+
 void pmm_init(struct limine_memmap_request memmap_request, struct limine_hhdm_request hhdm_request);
 void pmm_free(uint64_t phys_addr);
 uint64_t pmm_alloc();

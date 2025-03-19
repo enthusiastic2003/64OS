@@ -7,6 +7,7 @@
 struct limine_memmap_entry **memmap_entries;
 uint64_t memmap_entry_count;
 uint8_t *pmm_bitmap;
+uint64_t bitmap_size;
 uint64_t pmm_total_frames = 0;
 uint64_t pmm_used_frames = 0;
 
@@ -66,7 +67,7 @@ void pmm_init(struct limine_memmap_request memmap_request, struct limine_hhdm_re
 
     // Step 2: Initialize the bitmap in the largest usable region
     pmm_total_frames = total_memory / PAGE_SIZE;
-    uint64_t bitmap_size = (pmm_total_frames + 7) / 8; // 1 bit per frame, rounded up
+    bitmap_size = (pmm_total_frames + 7) / 8; // 1 bit per frame, rounded up
 
     // Place the bitmap at the start of the largest region (using HHDM)
     pmm_bitmap = (uint8_t*)(largest_region_base + hhdm_request.response->offset);

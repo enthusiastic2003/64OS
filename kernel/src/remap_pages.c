@@ -2,6 +2,7 @@
 #include "text_renderer.h"
 #include "pmm_mngr.h"
 #include "limine_requests.h"
+#include "limine.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -36,11 +37,6 @@ static uint64_t get_limine_stack_bottom() {
 
 
 uint64_t new_stack_top;
-uint64_t new_stack_bottom;
-
-
-#define LIMINE_STACK_SIZE 0x10000  // 64 KiB
-
 
 
 // Define Global new stack top and bottom pointers
@@ -51,18 +47,6 @@ uint64_t new_stack_bottom;
  * It then sets up a recursive mapping (using PML4 entry 510) so that later the CPU
  * can access the page table hierarchy without relying on HHDM.
  */
-
-
-
-void t_hcf() {
-    for (;;) {
-        asm ("hlt");
-    }
-}
-
-
-
-
 
 void print_paging_structure(uint64_t* pml4) {
 
@@ -108,32 +92,6 @@ void print_paging_structure(uint64_t* pml4) {
     }
 }
 
-__attribute__((noinline)) void vd_breakpoint(){
-    return;
-}
-
-__attribute__((noinline)) void change_cr3(uint64_t new_pml4_phys) {
-
-    //print old stack pointers
-
-
-    //Before switching, set the new stack pointers
-    asm volatile("mov %0, %%rbp" :: "r"(new_stack_top));
-
-    
-    //kprintf("Return address: %p\n", ret_addr);
-
-
-    //Create a new debug symbol
-    asm volatile("mov %0, %%cr3" :: "r"(new_pml4_phys));
-
-    // Get the return address
-
-
-
-    return;
-}
-
 void remap_stack(uint64_t *new_pml4) {
 
     uint64_t new_pdp_phys_stack = pmm_alloc();
@@ -175,7 +133,7 @@ void remap_stack(uint64_t *new_pml4) {
         new_pt[j] = phys_addr | 0x3; // Present + Write
     }
 
-    print_paging_structure(new_pml4);
+    //print_paging_structure(new_pml4);
 
 
     // Copy STACK_SIZE bytes from the old stack to the new stack
@@ -188,161 +146,93 @@ void remap_stack(uint64_t *new_pml4) {
     ((uint64_t)255 << 12);
 
     new_stack_top |= 0xFFFF000000000000;
-
-    new_stack_bottom = new_stack_top - (old_stack_top - old_stack_bottom);
-
-    kprintf("old stack size = %p\n", old_stack_top - old_stack_bottom);
-    // Copy the old stack to the new stack
-
-
-
-    //memcpy((void*) (new_stack_top - LIMINE_STACK_SIZE), (void*) (old_stack_top - LIMINE_STACK_SIZE), LIMINE_STACK_SIZE);
-
-    // Change the stack bottom and top pointers
-
-    //asm volatile("1: jmp 1b");
-
-    // asm volatile("mov %0, %%rbp" :: "r"(new_stack_top));
-    // asm volatile("mov %0, %%rsp" :: "r"(new_stack_bottom));
     // return;
 
     return;
 }
 
 
-void remap_kernel() {
-    uint64_t cr3 = read_cr3();
-    uint64_t* old_pml4 = (uint64_t*)temp_phys_to_virt(cr3);
+void remap_frame_buffer(uint64_t *new_pml4) {
+    struct limine_framebuffer* old_framebuffer = framebuffer_request.response->framebuffers[0];
+
+    // Get the physical address of the framebuffer
+    uint64_t old_framebuffer_phys = temp_virt_to_phys((uint64_t)old_framebuffer->address);
+
+    // Calculate the size of the framebuffer
+    uint64_t framebuffer_size = old_framebuffer->height * old_framebuffer->pitch;
+
+    // Allocate and initialize a PDP entry
+    uint64_t framebuffer_pdp_phys = pmm_alloc();
+    uint64_t* framebuffer_pdp = (uint64_t*)temp_phys_to_virt(framebuffer_pdp_phys);
+    memset(framebuffer_pdp, 0, 4096);
+
+    // Map the PDP entry into the PML4
+    new_pml4[258] = framebuffer_pdp_phys | 0x3; // Present + Writable
+
+    // Allocate and initialize a PD entry
+    uint64_t framebuffer_pd_phys = pmm_alloc();
+    uint64_t* framebuffer_pd = (uint64_t*)temp_phys_to_virt(framebuffer_pd_phys);
+    memset(framebuffer_pd, 0, 4096);
+
+    // Map the PD entry into the PDP
+    framebuffer_pdp[0] = framebuffer_pd_phys | 0x3; // Present + Writable
+
+    // Calculate the number of PTs required
+    uint64_t num_pt = (framebuffer_size + 2 * 1024 * 1024 - 1) / (2 * 1024 * 1024);
+
+    // Allocate and map PTs
+    for (uint64_t i = 0; i < num_pt; i++) {
+        // Allocate a PT
+        uint64_t framebuffer_pt_phys = pmm_alloc();
+        uint64_t* framebuffer_pt = (uint64_t*)temp_phys_to_virt(framebuffer_pt_phys);
+        memset(framebuffer_pt, 0, 4096);
+
+        // Map the PT into the PD
+        framebuffer_pd[i] = framebuffer_pt_phys | 0x3; // Present + Writable
+
+        // Map the framebuffer memory into the PT
+        for (uint64_t j = 0; j < 512; j++) {
+            uint64_t phys_addr = old_framebuffer_phys + (i * 2 * 1024 * 1024) + (j * 4096);
+            framebuffer_pt[j] = phys_addr | 0x3; // Present + Writable
+        }
+    }
+
+    uint64_t new_framebuffer_virt_addr;
 
 
-    // print_paging_structure(old_pml4);
+    new_framebuffer_virt_addr = ((uint64_t)258 << 39) |
+    ((uint64_t)0 << 30) |
+    ((uint64_t)0 << 21) |
+    ((uint64_t)0 << 12);
 
-    // uint64_t new_pml4_phys = pmm_alloc();
-    // uint64_t* new_pml4 = (uint64_t*)temp_phys_to_virt(new_pml4_phys);
-    // memset(new_pml4, 0, 4096);
+    new_framebuffer_virt_addr |= 0xFFFF000000000000;
 
-    // uint32_t kernel_pml4_entry = 511;
-    // if (!(old_pml4[kernel_pml4_entry] & 1))
-    //     kprintf("Kernel mapping does not exist!");
+    framebuffer_request.response->framebuffers[0]->address = (uint64_t* )new_framebuffer_virt_addr;
 
-    // uint64_t old_pdp_phys = old_pml4[kernel_pml4_entry] & ~0xFFF;
-    // uint64_t* old_pdp = (uint64_t*)temp_phys_to_virt(old_pdp_phys);
+    init_text_renderer(new_framebuffer_virt_addr, old_framebuffer->width, old_framebuffer->height, old_framebuffer->pitch);
 
-    // uint64_t new_pdp_phys = pmm_alloc();
-    // uint64_t* new_pdp = (uint64_t*)temp_phys_to_virt(new_pdp_phys);
-    // memset(new_pdp, 0, 4096);
 
-    // new_pml4[kernel_pml4_entry] = new_pdp_phys | 0x3;
+    // Update the framebuffer structure
 
-    // int last_used_pdp_index = -1;
-    // for (int pdp_index = 0; pdp_index < 512; pdp_index++) {
-    //     if (!(old_pdp[pdp_index] & 1))
-    //         continue;
-        
 
-    //     uint64_t old_pd_phys = old_pdp[pdp_index] & ~0xFFF;
-    //     uint64_t* old_pd = (uint64_t*)temp_phys_to_virt(old_pd_phys);
-
-    //     uint64_t new_pd_phys = pmm_alloc();
-    //     uint64_t* new_pd = (uint64_t*)temp_phys_to_virt(new_pd_phys);
-    //     memset(new_pd, 0, 4096);
-
-    //     new_pdp[pdp_index] = new_pd_phys | 0x3;
-
-    //     for (int pd_index = 0; pd_index < 512; pd_index++) {
-
-    //         if (!(old_pd[pd_index] & 1))
-    //             continue;
-
-    //         uint64_t old_pt_phys = old_pd[pd_index] & ~0xFFF;
-    //         if (old_pd[pd_index] & (1ULL << 7)) {
-    //             new_pd[pd_index] = old_pd[pd_index];
-    //             continue;
-    //         }
-
-    //         uint64_t* old_pt = (uint64_t*)temp_phys_to_virt(old_pt_phys);
-    //         uint64_t new_pt_phys = pmm_alloc();
-    //         uint64_t* new_pt = (uint64_t*)temp_phys_to_virt(new_pt_phys);
-    //         memset(new_pt, 0, 4096);
-
-    //         new_pd[pd_index] = new_pt_phys | 0x3;
-
-    //         for (int pt_index = 0; pt_index < 512; pt_index++) {
-    //             if (!(old_pt[pt_index] & 1))
-    //                 continue;
-    //             new_pt[pt_index] = old_pt[pt_index];
-    //         }
-    //     }
-    // }
-
-    // Remap the stack
-    remap_stack(old_pml4);
-
-    kprintf("Stack Working!!");
-
-    return;
 
 }
 
 
 
+void remap_kernel() {
+    uint64_t cr3 = read_cr3();
+    uint64_t* old_pml4 = (uint64_t*)temp_phys_to_virt(cr3);
 
+    // Remap the stack
+    remap_stack(old_pml4);
 
+    remap_frame_buffer(old_pml4);
 
-// // TODO: Solve with malloc
-// void preserve_limine_requests() {
-//     // Allocate memory for each Limine request structure
-//     uint64_t hhdm_phys = pmm_alloc();
-//     uint64_t exec_phys = pmm_alloc();
-//     uint64_t fb_phys = pmm_alloc();
+    kprintf("Stack Working!!");
 
-//     uint64_t hddm_response_phys = pmm_alloc();
-//     uint64_t exec_response_phys = pmm_alloc();
-//     uint64_t fb_response_phys = pmm_alloc();
-//     uint64_t framebuffer_struct_phys = pmm_alloc();
+    old_pml4[256] = 0; // Clear the self-referential entry
 
+    return;
 
-//     if (!hhdm_phys || !exec_phys || !fb_phys || !hddm_response_phys || !exec_response_phys) {
-//         // Handle memory allocation failure (e.g., panic, log error)
-//         return;
-//     }
-
-//     // Create response structures
-//     struct limine_hhdm_response *hhdm_response = (void *)PHYS_TO_VIRT(hddm_response_phys);
-//     struct limine_kernel_file_response *exec_response = (void *)PHYS_TO_VIRT(exec_response_phys);
-//     struct limine_framebuffer_response *fb_response = (void *)PHYS_TO_VIRT(fb_response_phys);
-//     struct limine_framebuffer *framebuffer_struct = (void *)PHYS_TO_VIRT(framebuffer_struct_phys);
-
-//     // Compute virtual addresses using HHDM
-//     volatile struct limine_hhdm_request *new_hhdm_request = (void *)(hhdm_phys + HHDM_OFFSET);
-//     volatile struct limine_kernel_file_request *new_exec_file = (void *)(exec_phys + HHDM_OFFSET);
-//     volatile struct limine_framebuffer_request *new_framebuffer_request = (void *)(fb_phys + HHDM_OFFSET);
-
-
-//     // Copy original structures to allocated memory
-//     memcpy((void *)new_hhdm_request, (void *)&hhdm_request, sizeof(hhdm_request));
-//     memcpy((void *)new_exec_file, (void *)&exec_file, sizeof(exec_file));
-//     memcpy((void *)new_framebuffer_request, (void *)&framebuffer_request, sizeof(framebuffer_request));
-    
-//     memcpy((void*)hhdm_response, (void*)hhdm_request.response, sizeof(struct limine_hhdm_response));
-//     memcpy((void*)exec_response, (void*)exec_file.response, sizeof(struct limine_kernel_file_response));
-//     memcpy((void*)fb_response, (void*)framebuffer_request.response, sizeof(struct limine_framebuffer_response));
-
-//     memcpy((void*)framebuffer_struct, (void*)framebuffer_request.response->framebuffers[0], sizeof(struct limine_framebuffer));
-    
-//     // Update pointers to response structures
-//     new_hhdm_request->response = hhdm_response;
-//     new_exec_file->response = exec_response;
-//     new_framebuffer_request->response = fb_response;
-
-//     new_framebuffer_request->response->framebuffers[0] = framebuffer_struct;
-
-//     // Update pointers to new structures
-//     hhdm_request = *new_hhdm_request;
-//     exec_file = *new_exec_file;
-//     framebuffer_request = *new_framebuffer_request;
-
-
-    
-// }
-
+}
