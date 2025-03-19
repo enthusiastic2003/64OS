@@ -8,6 +8,7 @@
 #include "pagining_mgr.h"
 #include "limine_requests.h"
 #include "remap_pages.h"
+#include "idt.h"
 
 extern uint64_t _end;
 // Set the base revision to 3, this is recommended as this is the latest
@@ -170,6 +171,18 @@ void kmain(void) {
 
     kprintf("If you are seeing this, the stack has been remapped successfully\n");
     kprintf("Also disabled hhdm\n");
+
+    idt_install();
+    kprintf("IDT installed\n");
+
+    // Test huge pages
+
+    // Try to page fault:
+
+    uint64_t *ptr = (uint64_t *)0x1000;
+    *ptr = 0x12345678;
+
+    //test_huge_pages();
 
 
     

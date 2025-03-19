@@ -3,9 +3,32 @@
 #include "pmm_mngr.h"
 #include "limine_requests.h"
 #include "limine.h"
+#include "vmm_mngr.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+
+
+#include <stdint.h>
+
+#define PAGE_PRESENT 0x1
+#define PAGE_WRITE   0x2
+#define RECURSIVE_INDEX 510
+
+/**
+ * setup_recursive_mapping - Sets up the recursive mapping in the PML4.
+ *
+ * @pml4:          Virtual address pointer to the PML4 table.
+ * @pml4_phys:     Physical address of the PML4 table.
+ *
+ * This function writes the physical address of the PML4 table into the
+ * 510th entry of the PML4 with the flags to mark it present and writable.
+ */
+void setup_recursive_mapping(virt_addr_t *pml4, phys_addr_t pml4_phys) {
+    // Set the 510th entry to point to the PML4 itself.
+    pml4[RECURSIVE_INDEX] = pml4_phys | PAGE_PRESENT | PAGE_WRITE;
+}
+
 
 // Translate a physical address to its virtual address using HHDM.
 // (This is only used during early setup.)
@@ -209,7 +232,7 @@ void remap_frame_buffer(uint64_t *new_pml4) {
 
     framebuffer_request.response->framebuffers[0]->address = (uint64_t* )new_framebuffer_virt_addr;
 
-    init_text_renderer(new_framebuffer_virt_addr, old_framebuffer->width, old_framebuffer->height, old_framebuffer->pitch);
+    //init_text_renderer(new_framebuffer_virt_addr, old_framebuffer->width, old_framebuffer->height, old_framebuffer->pitch);
 
 
     // Update the framebuffer structure
@@ -227,11 +250,12 @@ void remap_kernel() {
     // Remap the stack
     remap_stack(old_pml4);
 
-    remap_frame_buffer(old_pml4);
+    //remap_frame_buffer(old_pml4);
+
+    // PML4[510] for recursive mapping. No, write explicitly. Do not allocate anymore space
+    setup_recursive_mapping(old_pml4, cr3);
 
     kprintf("Stack Working!!");
-
-    old_pml4[256] = 0; // Clear the self-referential entry
 
     return;
 

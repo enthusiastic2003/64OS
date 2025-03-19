@@ -3,10 +3,10 @@ BdsDxe: starting Boot0002 "UEFI QEMU DVD-ROM QM00005 " from PciRoot(0x0)/Pci(0x1
 [2J[01;01H[01;01H[2J[01;01H[01;01H
  Framebuffer data at 0xFFFF800080000000
  and pointer is of size 8
-RSP: 0xFFFF80007E68CFE0
-RBP: 0xFFFF80007E68CFF0
-Kernel loaded at physical: 0xFFFFFFFF80001270
-cr3: FFFF80007E67C000
+RSP: 0xFFFF80007E68BFE0
+RBP: 0xFFFF80007E68BFF0
+Kernel loaded at physical: 0xFFFFFFFF800012F0
+cr3: FFFF80007E67B000
 Memory Map:
   Base: 0x0, Length: 0xA0000, Type: 0
   Base: 0x100000, Length: 0x700000, Type: 0
@@ -15,16 +15,15 @@ Memory Map:
   Base: 0x80B000, Length: 0x1000, Type: 3
   Base: 0x80C000, Length: 0x5000, Type: 0
   Base: 0x811000, Length: 0xEF000, Type: 3
-  Base: 0x900000, Length: 0x7B2D5000, Type: 0
-  Base: 0x7BBD5000, Length: 0x12000, Type: 5
-  Base: 0x7BBE7000, Length: 0x7000, Type: 0
-  Base: 0x7BBEE000, Length: 0x3F000, Type: 5
+  Base: 0x900000, Length: 0x7B2D0000, Type: 0
+  Base: 0x7BBD0000, Length: 0x6000, Type: 6
+  Base: 0x7BBD6000, Length: 0x11000, Type: 5
+  Base: 0x7BBE7000, Length: 0x9000, Type: 0
+  Base: 0x7BBF0000, Length: 0x3D000, Type: 5
   Base: 0x7BC2D000, Length: 0x29E9000, Type: 0
   Base: 0x7E616000, Length: 0x5000, Type: 1
   Base: 0x7E61B000, Length: 0x12000, Type: 0
-  Base: 0x7E62D000, Length: 0x3D000, Type: 5
-  Base: 0x7E66A000, Length: 0x5000, Type: 6
-  Base: 0x7E66F000, Length: 0x2F000, Type: 5
+  Base: 0x7E62D000, Length: 0x71000, Type: 5
   Base: 0x7E69E000, Length: 0x8000, Type: 1
   Base: 0x7E6A6000, Length: 0xDE000, Type: 0
   Base: 0x7E784000, Length: 0x3000, Type: 1
@@ -47,93 +46,96 @@ Memory Map:
   Base: 0x100000000, Length: 0x80000000, Type: 0
   Base: 0xFD00000000, Length: 0x300000000, Type: 1
 Total memory: 4089 MB
-Total frames: 1046835
+Total frames: 1046832
 Bitmap size: 127 KB
 Bitmap address: 0xFFFF800100000000
 Bitmap start: 100000000
-Bitmap end: 10001FF27
+Bitmap end: 10001FF26
 Bitmap start frame: 1048576
 Bitmap end frame: 1048608
 PMM initialized!
-Total frames: 1046835, Used frames: 32
+Total frames: 1046832, Used frames: 32
 -------------------------
 PMM tests
 -------------------------
-Total frames: 1046835
-Free frames: 1046803
+Total frames: 1046832
+Free frames: 1046800
 Used frames: 32
 Allocated frames: 0x100000, 0x101000
-Free frames: 1046801
+Free frames: 1046798
 Used frames: 34
 Freed 1 frame
-Free frames: 1046802
+Free frames: 1046799
 Used frames: 33
 -------------------------
 Existing Pages Test
 -------------------------
 uint64_t size: 8
 HHDM offset: 0xFFFF800000000000
-PML4: 0xFFFF80007E67C000
+PML4: 0xFFFF80007E67B000
 , table size: 4096Skipping self-referential entry
-PML4[511] = 0x7E67B027 (Phys: 0x7E67B000)
-  PDPT[510] = 0x7E67A027 (Phys: 0x7E67A000)
-      PT[0] = 0x800000007E66A023 (Virt: 0xFFFF80000000 -> Phys: 0x7E66A000)
-      PT[1] = 0x7E66B021 (Virt: 0xFFFF80001000 -> Phys: 0x7E66B000)
-      PT[2] = 0x7E66C021 (Virt: 0xFFFF80002000 -> Phys: 0x7E66C000)
-      PT[3] = 0x800000007E66D021 (Virt: 0xFFFF80003000 -> Phys: 0x7E66D000)
-      PT[4] = 0x800000007E66E063 (Virt: 0xFFFF80004000 -> Phys: 0x7E66E000)
+PML4[511] = 0x7E67A027 (Phys: 0x7E67A000)
+  PDPT[510] = 0x7E679027 (Phys: 0x7E679000)
+      PT[0] = 0x800000007BBD0023 (Virt: 0xFFFF80000000 -> Phys: 0x7BBD0000)
+      PT[1] = 0x7BBD1021 (Virt: 0xFFFF80001000 -> Phys: 0x7BBD1000)
+      PT[2] = 0x7BBD2021 (Virt: 0xFFFF80002000 -> Phys: 0x7BBD2000)
+      PT[3] = 0x800000007BBD3021 (Virt: 0xFFFF80003000 -> Phys: 0x7BBD3000)
+      PT[4] = 0x800000007BBD4003 (Virt: 0xFFFF80004000 -> Phys: 0x7BBD4000)
+      PT[5] = 0x800000007BBD5063 (Virt: 0xFFFF80005000 -> Phys: 0x7BBD5000)
 -------------------------
 Other Tests tests
 -------------------------
-Address: 0xFFFF80007BBD7000
-Size: 63344
+Address: 0xFFFF80007BBD6000
+Size: 66904
 Path: /boot/kernel
 Media type: 1
 -------------------------
 Limine Response Data Structures Pointers
 -------------------------
-limine_memmap_request response: 0xFFFF80007BBF6000
-, end: 0xFFFF80007BBF60C0
-limine_hhdm_request response: 0xFFFF80007E695000
-, end: 0xFFFF80007E695080
-limine_executable_file_request response: 0xFFFF80007E672000
-, end: 0xFFFF80007E672080
+limine_memmap_request response: 0xFFFF80007BBF8000
+, end: 0xFFFF80007BBF80C0
+limine_hhdm_request response: 0xFFFF80007E694000
+, end: 0xFFFF80007E694080
+limine_executable_file_request response: 0xFFFF80007E671000
+, end: 0xFFFF80007E671080
 Preserved Limine requests!!
-limine_hhdm_request response: 0xFFFF80007E695000
-, end: 0xFFFF80007E695080
-limine_executable_file_request response: 0xFFFF80007E672000
-, end: 0xFFFF80007E672080
-limine_framebuffer_request response: 0xFFFF80007E690000
-, end: 0xFFFF80007E6900C0
-limine_memmap_request response: 0xFFFF80007BBF6000
-, end: 0xFFFF80007BBF60C0
-Kernel end: 0xFFFFFFFF80005000
+limine_hhdm_request response: 0xFFFF80007E694000
+, end: 0xFFFF80007E694080
+limine_executable_file_request response: 0xFFFF80007E671000
+, end: 0xFFFF80007E671080
+limine_framebuffer_request response: 0xFFFF80007E68F000
+, end: 0xFFFF80007E68F0C0
+limine_memmap_request response: 0xFFFF80007BBF8000
+, end: 0xFFFF80007BBF80C0
+Kernel end: 0xFFFFFFFF80006000
 Skipping self-referential entry
 PML4[257] -> 0x100000
-PML4[511] -> 0x7E67B000
-  PDP[510] -> 0x7E67A000
-    PD[0] -> 0x7E679000
-      PT[0] -> 0x800000007E66A000
-      PT[1] -> 0x7E66B000
-      PT[2] -> 0x7E66C000
-      PT[3] -> 0x800000007E66D000
-      PT[4] -> 0x800000007E66E000
+PML4[511] -> 0x7E67A000
+  PDP[510] -> 0x7E679000
+    PD[0] -> 0x7E678000
+      PT[0] -> 0x800000007BBD0000
+      PT[1] -> 0x7BBD1000
+      PT[2] -> 0x7BBD2000
+      PT[3] -> 0x800000007BBD3000
+      PT[4] -> 0x800000007BBD4000
+      PT[5] -> 0x800000007BBD5000
 Skipping self-referential entry
 PML4[257] -> 0x100000
   PDP[0] -> 0x102000
     PD[0] -> 0x103000
-PML4[511] -> 0x7E67B000
-  PDP[510] -> 0x7E67A000
-    PD[0] -> 0x7E679000
-      PT[0] -> 0x800000007E66A000
-      PT[1] -> 0x7E66B000
-      PT[2] -> 0x7E66C000
-      PT[3] -> 0x800000007E66D000
-      PT[4] -> 0x800000007E66E000
-
- Framebuffer data at 0xFFFF810000000000
- and pointer is of size 8
+PML4[511] -> 0x7E67A000
+  PDP[510] -> 0x7E679000
+    PD[0] -> 0x7E678000
+      PT[0] -> 0x800000007BBD0000
+      PT[1] -> 0x7BBD1000
+      PT[2] -> 0x7BBD2000
+      PT[3] -> 0x800000007BBD3000
+      PT[4] -> 0x800000007BBD4000
+      PT[5] -> 0x800000007BBD5000
 Stack Working!!New RSP: 0xFFFF8080000FEFF0
 New RBP: 0xFFFF8080000FF000
 If you are seeing this, the stack has been remapped successfully
 Also disabled hhdm
+IDT installed
+Page fault at virtual address: 0x1000
+Error code: 0x2
