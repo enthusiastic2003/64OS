@@ -7,7 +7,7 @@
 #include "string.h"
 #include "pagining_mgr.h"
 #include "limine_requests.h"
-#include "vmm_mngr.h"
+#include "remap_pages.h"
 
 extern uint64_t _end;
 // Set the base revision to 3, this is recommended as this is the latest
@@ -36,7 +36,8 @@ static void hcf(void) {
     }
 }
 
-
+extern uint64_t new_stack_top;
+extern uint64_t new_stack_bottom;
 
 // Kernel start and end from linker script
 void test_huge_pages() {
@@ -51,7 +52,17 @@ void test_huge_pages() {
 
 
 
+static inline uint64_t get_limine_stack_base() {
+    uint64_t stack_base;
+    asm volatile ("mov %%rsp, %0" : "=r"(stack_base));
+    return stack_base;
+}
 
+static inline uint64_t get_limine_stack_bottom() {
+    uint64_t stack_bottom;
+    asm volatile ("mov %%rbp, %0" : "=r"(stack_bottom));
+    return stack_bottom;
+}
 
 // The following will be our kernel's entry point.
 // If renaming kmain() to something else, make sure to change the
@@ -68,11 +79,11 @@ void kmain(void) {
         hcf();
     }
 
-    
+    kprintf("RSP: %p\n", get_limine_stack_base());
+    kprintf("RBP: %p\n", get_limine_stack_bottom());
 
     kprintf("Kernel loaded at physical: %p\n", &kmain);
-    uint64_t rsp = read_cr3();
-    kprintf("Current stack pointer: %p\n", rsp);
+
     kprintf("cr3: %lx\n",hhdm_request.response->offset + read_cr3());
     print_and_init_memmap(memmap_request, hhdm_request);
 
@@ -123,9 +134,10 @@ void kmain(void) {
     kprintf("limine_hhdm_request response: %p\n, end: %p\n", hhdm_request.response, sizeof(hhdm_request.response) + hhdm_request.response);
     kprintf("limine_executable_file_request response: %p\n, end: %p\n", exec_file.response, sizeof(exec_file.response) + exec_file.response);
 
-    preserve_limine_requests();
+//    preserve_limine_requests();
 
-    init_text_renderer();
+//   init_text_renderer();
+//    init_text_renderer();
     kprintf("Preserved Limine requests!!\n");
     // Print the reloacted pointers
     kprintf("limine_hhdm_request response: %p\n, end: %p\n", hhdm_request.response, sizeof(hhdm_request.response) + hhdm_request.response);
@@ -134,7 +146,20 @@ void kmain(void) {
     kprintf("limine_memmap_request response: %p\n, end: %p\n", memmap_request.response, sizeof(memmap_request.response) + memmap_request.response);
     
     kprintf("Kernel end: %p\n", &_end);
-        
+    //inspect_page_tables();
+
+    remap_kernel();
+
+    kprintf(" Successfully remapped kernel\n");
+
+    kprintf("RSP: %p\n", get_limine_stack_base());
+    kprintf("RBP: %p\n", get_limine_stack_bottom());
+
+    asm volatile("mov %0, %%rbp" :: "r"(new_stack_top));
+    asm volatile("mov %0, %%rsp" :: "r"(new_stack_bottom));
+
+    kprintf("If you are seeing this, the stack has been remapped successfully\n");
+
     hcf();
 
 

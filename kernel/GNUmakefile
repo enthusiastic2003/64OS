@@ -48,17 +48,7 @@ endif
 override CC_IS_CLANG := $(shell ! $(CC) --version 2>/dev/null | grep 'clang' >/dev/null 2>&1; echo $$?)
 
 # Internal C flags that should not be changed by the user.
-override CFLAGS += \
-    -Wall \
-    -Wextra \
-    -std=gnu11 \
-    -nostdinc \
-    -ffreestanding \
-    -fno-stack-protector \
-    -fno-stack-check \
-    -fno-PIC \
-    -ffunction-sections \
-    -fdata-sections
+CFLAGS += -Wall -Wextra -std=gnu11 -nostdinc -ffreestanding -fno-stack-protector -mno-red-zone -fno-omit-frame-pointer -fno-stack-check -fno-PIC -ffunction-sections -fdata-sections
 
 # Internal C preprocessor flags that should not be changed by the user.
 override CPPFLAGS := \
