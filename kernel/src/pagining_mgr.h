@@ -47,8 +47,8 @@ void inspect_page_tables() {
     kprintf("PML4: 0x%lx\n, table size: %d", pml4, sizeof((*pml4))*512);
 
     for (int i = 0; i < 512; i++) {
-        if (i == 256) {
-            kprintf("Skipping self-referential entry\n");
+
+        if (i==256) {
             continue;
         }
 

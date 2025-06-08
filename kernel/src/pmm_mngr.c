@@ -6,10 +6,11 @@
 
 struct limine_memmap_entry **memmap_entries;
 uint64_t memmap_entry_count;
-uint8_t *pmm_bitmap;
+uint64_t *pmm_bitmap;
 uint64_t bitmap_size;
 uint64_t pmm_total_frames = 0;
 uint64_t pmm_used_frames = 0;
+uint64_t bitmap_alloc_pages;
 
 // Physical memory bitmap (1 bit per 4KB frame)
 
@@ -70,7 +71,7 @@ void pmm_init(struct limine_memmap_request memmap_request, struct limine_hhdm_re
     bitmap_size = (pmm_total_frames + 7) / 8; // 1 bit per frame, rounded up
 
     // Place the bitmap at the start of the largest region (using HHDM)
-    pmm_bitmap = (uint8_t*)(largest_region_base + hhdm_request.response->offset);
+    pmm_bitmap = (uint64_t*)(largest_region_base + hhdm_request.response->offset);
 
     // Mark all memory as "used" initially
     memset(pmm_bitmap, 0xFF, bitmap_size);
@@ -108,6 +109,7 @@ void pmm_init(struct limine_memmap_request memmap_request, struct limine_hhdm_re
     // Step 4: Mark the bitmap's own memory as "used"
     uint64_t bitmap_start_frame = largest_region_base / PAGE_SIZE;
     uint64_t bitmap_end_frame = (largest_region_base + bitmap_size + PAGE_SIZE - 1) / PAGE_SIZE;
+    bitmap_alloc_pages = bitmap_end_frame - bitmap_start_frame + 1;
     for (uint64_t j = bitmap_start_frame; j < bitmap_end_frame; j++) {
         pmm_bitmap[j / 8] |= (1 << (j % 8)); // Set bit (mark as used)
     }

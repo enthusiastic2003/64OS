@@ -11,7 +11,7 @@ QEMUFLAGS := -m 4G -monitor stdio -serial file:output.txt
 override IMAGE_NAME := template-$(ARCH)
 
 # Toolchain for building the 'limine' executable for the host.
-HOST_CC := cc
+HOST_CC := x86_64-elf-gcc
 HOST_CFLAGS := -g -O2 -pipe
 HOST_CPPFLAGS := 
 HOST_LDFLAGS :=
@@ -26,8 +26,21 @@ all-hdd: $(IMAGE_NAME).hdd
 .PHONY: run
 run: run-$(ARCH)
 
+.PHONY: debug
+debug: debug-$(ARCH)
+
 .PHONY: run-hdd
 run-hdd: run-hdd-$(ARCH)
+
+.PHONY: debug-x86_64
+debug-x86_64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
+	qemu-system-$(ARCH) \
+		-M q35 \
+		-drive if=pflash,unit=0,format=raw,file=ovmf/ovmf-code-$(ARCH).fd,readonly=on \
+		-cdrom $(IMAGE_NAME).iso \
+		-S -gdb tcp::1234 \
+		$(QEMUFLAGS)
+
 
 .PHONY: run-x86_64
 run-x86_64: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso

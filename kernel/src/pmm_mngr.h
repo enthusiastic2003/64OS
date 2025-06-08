@@ -8,8 +8,6 @@
 #include <stddef.h>
 #include "limine.h"
 
-#define PAGE_SIZE 4096
-
 static inline uint64_t read_cr3() {
     uint64_t cr3;
     asm volatile ("mov %%cr3, %0" : "=r"(cr3));
